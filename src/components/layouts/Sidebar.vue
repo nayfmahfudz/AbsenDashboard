@@ -18,39 +18,38 @@
       <img src="@/assets/logo.svg" alt="Logo" class="w-10">
       <div class="ml-2 flex flex-col">
         <h1 class="text-sm text-gray-700 font-medium">Admin Panel</h1>
-        <p class="text-gray-400 text-xs">Hidrologi</p>
+        <p class="text-gray-400 text-xs">OP</p>
       </div>
     </header>
     <!-- Menu -->
     <div class="mt-14">
       <menu-header text="Development" />
       <menu-item icon="lightning-bolt-icon-o" text="Getting Started" :route="{name: 'dev-getting-started'}" />
-      <menu-item icon="cube-icon-o" text="Curah Hujan">
+      <menu-item icon="cube-icon-o" text="Absensi">
         <template #sub-menu>
-          <menu-item-sub text="Input Data Pos" :route="{name: 'inputpos'}" />
-          <menu-item-sub text="Live Data" :route="{name: 'liveDataCH'}" />
-          <menu-item-sub text="Data Pos" :route="{name: 'listpos'}" />
+          <menu-item-sub text="Data Bulanan" :route="{name: 'absensiBulanan'}" />
+          <menu-item-sub text="Data Harian" :route="{name: 'dataAbsenHarian'}" />
+          <menu-item-sub text="Data User" :route="{name: 'listuser'}" />
         </template>
       </menu-item>
-      <menu-item icon="cube-icon-o" text="Water Level">
+      <menu-item icon="cube-icon-o" text="Laporan Progress">
         <template #sub-menu>
-          <menu-item-sub text="Input Data Pos" :route="{name: 'inputposDA'}" />
-          <menu-item-sub text="Live Data" :route="{name: 'liveDataAwlr'}" />
-          <menu-item-sub text="Data Pos" :route="{name: 'listposDA'}" />
+          <menu-item-sub text="Data Bulanan" :route="{name: 'bulananProgress'}" />
+          <menu-item-sub text="Data Harian" :route="{name: 'dataTableProgress'}" />
         </template>
       </menu-item>
-      <menu-item icon="cube-icon-o" text="Klimatologi">
+      <!-- <menu-item icon="cube-icon-o" text="Klimatologi">
         <template #sub-menu>
-          <menu-item-sub text="Input Data Pos" :route="{name: 'inputposKL'}" />
-          <menu-item-sub text="Data Pos" :route="{name: 'listposKL'}" />
+          <menu-item-sub text="Input Data" :route="{name: 'inputposKL'}" />
+          <menu-item-sub text="Data" :route="{name: 'listposKL'}" />
         </template>
       </menu-item>
       <menu-item icon="cube-icon-o" text="Kualitas Air">
         <template #sub-menu>
-          <menu-item-sub text="Input Data Pos" :route="{name: 'inputposKA'}" />
-          <menu-item-sub text="Data Pos" :route="{name: 'listposKA'}" />
+          <menu-item-sub text="Input Data" :route="{name: 'inputposKA'}" />
+          <menu-item-sub text="Data" :route="{name: 'listposKA'}" />
         </template>
-      </menu-item>
+      </menu-item> -->
     </div>
   </div>
 </template>

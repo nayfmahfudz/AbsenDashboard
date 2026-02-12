@@ -38,7 +38,7 @@ export default {
     }
   },
 
-  // Fetches posts when the component is created.
+  // Fetchests when the component is created.
   created() {
     axios.get(`http://192.168.10.102:5000/permohonan`)
     .then(response => {

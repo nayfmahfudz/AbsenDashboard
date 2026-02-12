@@ -2,7 +2,7 @@ const routes = [
   {
     path: '/',
     name: 'home',
-    component: () => import('@/pages/Guest.vue')
+    component: () => import('@/pages/index.vue')
   },
   {
     path: '/login',
@@ -20,6 +20,12 @@ const routes = [
         component: () => import('@/pages/Home.vue')
       },
       {
+        path: 'pdf-harian/:id',
+        alias: 'pdf-harian',
+        name: 'pdf-harian',
+        component: () => import('@/components/layouts/setupPDFharianpdf.vue')
+      },
+      {
         path: 'guest',
         name: 'guest',
         component: () => import('@/pages/Guest.vue')
@@ -27,7 +33,7 @@ const routes = [
       {
         path: 'dev/getting-started',
         name: 'dev-getting-started',
-        component: () => import('@/pages/developments/GettingStarted.vue')
+        component: () => import('@/pages/Home.vue')
       },
       {
         path: 'permohonan',
@@ -39,14 +45,14 @@ const routes = [
         component: () => import('@/pages/developments/Form/index.vue')
       },
       {
-        path: 'inputpos',
-        name: 'inputpos',
-        component: () => import('@/pages/developments/tables/inputPos.vue')
+        path: 'absensiBulanan',
+        name: 'absensiBulanan',
+        component: () => import('@/pages/developments/tables/absensiBulanan.vue')
       },
       {
-        path: 'inputposDA',
-        name: 'inputposDA',
-        component: () => import('@/pages/developments/tables/inputPosDA.vue')
+        path: 'bulananProgress',
+        name: 'bulananProgress',
+        component: () => import('@/pages/developments/tables/bulananProgress.vue')
       },
       {
         path: 'listposDA',
@@ -64,19 +70,19 @@ const routes = [
         component: () => import('@/pages/developments/tables/dataTablePosKA.vue')
       },
       {
-        path: 'liveDataCH',
-        name: 'liveDataCH',
-        component: () => import('@/pages/developments/tables/liveDataCH.vue')
+        path: 'dataAbsenHarian',
+        name: 'dataAbsenHarian',
+        component: () => import('@/pages/developments/tables/dataAbsenHarian.vue')
       },
       {
-        path: 'liveDataAwlr',
-        name: 'liveDataAwlr',
-        component: () => import('@/pages/developments/tables/liveDataAwlr.vue')
+        path: 'dataTableProgress',
+        name: 'dataTableProgress',
+        component: () => import('@/pages/developments/tables/dataTableProgress.vue')
       },
       {
-        path: 'listpos',
-        name: 'listpos',
-        component: () => import('@/pages/developments/tables/dataTablePos.vue')
+        path: 'listuser',
+        name: 'listuser',
+        component: () => import('@/pages/developments/tables/dataTableUser.vue')
       },
       {
         path: 'inputdatapos',

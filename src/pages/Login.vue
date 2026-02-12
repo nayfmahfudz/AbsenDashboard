@@ -74,20 +74,24 @@ export default {
         this.passwordErr = "password is required.";
       }else {
         const datapost = {
-            user: this.user,
-      password: md5(this.password),
+            email: this.user,
+      password: this.password,
         };
        axios
             .post(
-              `http://192.168.10.102:5000/login`,
+              `http://103.170.197.186:8000/users/login`,
               datapost
             )
             .then((response) => {
-              if(response.data.status==="succes"){
+                
+              if(response.data.status==="Success"){
                 this.$swal(response.data.message);
-                localStorage.user= response.data.user
-                this.$router.push('/admin')
+                localStorage.user= JSON.stringify(response.data.user);
+                this.$router.push('/admin');
               }else {this.$swal("Login Gagal");}
+            }).catch((error) => {
+               this.$swal(error.message);
+              console.log(error);
             });
       }
     },

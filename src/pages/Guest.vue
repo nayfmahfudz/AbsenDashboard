@@ -158,20 +158,20 @@ export default {
   height: 500px;
 }
 .card_2 {
-  position: absolute;
+ ition: absolute;
   width: 50%;
   padding: 10px;
   margin: auto;
 }
 
 .card_3 {
-  position: absolute;
+ ition: absolute;
   max-width: 100%;
   width: 4000px;
   height: 500px;
 }
 .input {
-  position: static;
+ ition: static;
   max-width: 100%;
   width: 800px;
 }
@@ -179,7 +179,7 @@ export default {
   width: 600px;
   height: 50%;
   background: white;
-  position: absolute;
+ ition: absolute;
   top: 100%;
   left: 50%;
   margin-top: -120px;

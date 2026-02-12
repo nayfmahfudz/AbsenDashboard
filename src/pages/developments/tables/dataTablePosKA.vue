@@ -15,7 +15,7 @@
       :fields="fetch_fields"
       type="csv"
     >
-      Download Pos
+      Download
     </jsonExcel>
     <br>
     <br>
@@ -74,7 +74,7 @@
         items: [],
         fetch_fields: {
         ID: "no",
-        "Nama pos": "nama_pos",
+        "Nama": "nama_pos",
       },
       }
     },

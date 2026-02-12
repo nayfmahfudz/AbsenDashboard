@@ -10,7 +10,7 @@
         w-40
         rounded
       " :data="items" :fields="fetch_fields" type="csv">
-            Download Pos
+            Download
         </jsonExcel>
         <br>
         <br>
@@ -40,7 +40,7 @@
                     </th>
                     <th class="p-2 border-r cursor-pointer text-sm font-thin text-gray-500">
                         <div class="flex items-center justify-center">
-                            Nama Pos
+                            Nama
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -129,7 +129,7 @@ export default {
             items: [],
             fetch_fields: {
                 ID: "id",
-                "Nama pos": "name",
+                "Nama": "name",
                 X: "pos.lat",
                 Y: "pos.lon",
                 tanggal: "tanggal",
