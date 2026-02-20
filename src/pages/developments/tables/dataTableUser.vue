@@ -1,22 +1,15 @@
 
 <template>
     <div class="table w-full p-2">
-        <button @click="exportToCSV" class="
-        bg-blue-500
-        hover:bg-blue-700
-        text-white
-        text-center
-        font-bold
-        p-2
-        w-40
-        rounded
-      ">
-            Download 
-        </button>
+        <div class="flex justify-start space-x-4">
+            <button @click="downloadPDF" class="bg-green-500 hover:bg-green-700 text-white font-bold p-2 w-40 rounded">
+                Download PDF
+            </button>
+        </div>
         <br>
         <br>
         <br>
-        <table class="w-full border">
+        <table class="w-full border" ref="table">
             <thead>
                 <tr class="bg-gray-50 border-b">
                     <th class="p-2 border-r cursor-pointer text-sm font-thin text-gray-500">
@@ -63,23 +56,40 @@
             </thead>
             <tbody>
 
-                <tr class="bg-gray-100 text-center border-b text-sm text-gray-600" v-for="(item,index) in  items" :key="item">
-                    <td class="p-2 border-r">{{ index+1 }}</td>
+                <tr class="bg-gray-100 text-center border-b text-sm text-gray-600"
+                    v-for="(item, index) in paginatedItems" :key="item.id || index">
+                    <td class="p-2 border-r">{{ ((currentPage - 1) * perPage) + index + 1 }}</td>
                     <td class="p-2 border-r">{{ item.firstName + ' ' + item.lastName }}</td>
                     <td class="p-2 border-r">{{ item.unitObj.nama_unit }}</td>
                     <td class="p-2 border-r">{{ item.jabatan }}</td>
                 </tr>
             </tbody>
         </table>
+        <div class="flex justify-center items-center mt-4" v-if="totalPages > 1">
+            <button @click="prevPage" :disabled="currentPage === 1"
+                class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md mr-2 disabled:opacity-50">
+                Sebelumnya
+            </button>
+            <span class="text-gray-700">Halaman {{ currentPage }} dari {{ totalPages }}</span>
+            <button @click="nextPage" :disabled="currentPage === totalPages"
+                class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md ml-2 disabled:opacity-50">
+                Berikutnya
+            </button>
+        </div>
     </div>
 </template>
 
 <script>
 import axios from 'axios';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import headerImage from '@/assets/header.png';
 export default {
     data() {
         return {
             items: [],
+            currentPage: 1,
+            perPage: 25,
             fetch_fields: {
                 "No": "no",
                 "Nama": {
@@ -93,6 +103,55 @@ export default {
         }
     },
     methods: {
+        async downloadPDF() {
+            const table = this.$refs.table;
+            if (!table) {
+                alert('Tabel tidak ditemukan untuk di-generate ke PDF.');
+                return;
+            }
+
+            try {
+                const canvas = await html2canvas(table, {
+                    scale: 2,
+                    useCORS: true,
+                });
+                const tableImgData = canvas.toDataURL('image/png');
+
+                const pdf = new jsPDF('p', 'pt', 'a4');
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const margin = 40;
+                const headerHeight = 60;
+                const headerBottomMargin = 20;
+
+                const contentWidth = pageWidth - margin * 2;
+                const contentStartY = margin + headerHeight + headerBottomMargin;
+                const contentHeight = pageHeight - contentStartY - margin;
+
+                const tableImgProps = pdf.getImageProperties(tableImgData);
+                const pdfTableHeight = (tableImgProps.height * contentWidth) / tableImgProps.width;
+
+                let heightLeft = pdfTableHeight;
+                let position = 0;
+
+                pdf.addImage(headerImage, 'PNG', margin, margin, contentWidth, headerHeight, undefined, 'NONE');
+                pdf.addImage(tableImgData, 'PNG', margin, contentStartY, contentWidth, pdfTableHeight);
+                heightLeft -= contentHeight;
+
+                while (heightLeft > 0) {
+                    position -= contentHeight;
+                    pdf.addPage();
+                    pdf.addImage(headerImage, 'PNG', margin, margin, contentWidth, headerHeight, undefined, 'NONE');
+                    pdf.addImage(tableImgData, 'PNG', margin, position + contentStartY, contentWidth, pdfTableHeight);
+                    heightLeft -= contentHeight;
+                }
+
+                pdf.save(`Daftar Pengguna.pdf`);
+            } catch (error) {
+                console.error("Gagal membuat PDF:", error);
+                alert("Terjadi kesalahan saat membuat PDF.");
+            }
+        },
         exportToCSV() {
             const items = this.itemsForExport;
             if (!items || items.length === 0) {
@@ -145,6 +204,16 @@ export default {
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
+        },
+        prevPage() {
+            if (this.currentPage > 1) {
+                this.currentPage--;
+            }
+        },
+        nextPage() {
+            if (this.currentPage < this.totalPages) {
+                this.currentPage++;
+            }
         }
     },
     computed: {
@@ -152,11 +221,19 @@ export default {
             return this.items.map((item, index) => {
                 return { ...item, no: index + 1 };
             });
+        },
+        paginatedItems() {
+            const start = (this.currentPage - 1) * this.perPage;
+            const end = start + this.perPage;
+            return this.items.slice(start, end);
+        },
+        totalPages() {
+            return Math.ceil(this.items.length / this.perPage);
         }
     },
     async created() {
-         await axios.get(`http://103.170.197.186:8000/users/unit/`+JSON.parse(localStorage.user).unitObj.id).then(result=>{
-           
+        await axios.get(`http://103.170.197.186:8000/users/unit/` + JSON.parse(localStorage.user).unitObj.id).then(result => {
+
             this.items = result.data;
         });
     }

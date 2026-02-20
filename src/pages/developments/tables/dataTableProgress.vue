@@ -3,6 +3,16 @@
 
         <br /><br /><br />
 
+        <div class="w-40 mb-4">
+            <VueDatePicker 
+                v-model="picked" 
+                :enable-time-picker="false"
+                auto-apply
+                model-type="yyyy-MM-dd"
+                format="yyyy-MM-dd"
+                @update:model-value="fetchData" 
+            />
+        </div>
         <div style="position: absolute; left: -9999px; width: 794px;">
             <LapkinReport v-if="items.length" ref="pdfReport" :items="items" :date="picked" />
             <LapkinReport v-if="singleItem.length" ref="singlePdfReport" :items="singleItem" :date="picked" />
@@ -105,10 +115,10 @@
             <tbody>
                 <tr
                     :class="item.progressList && item.progressList[0] && item.progressList[0].updatedAt == null ? 'bg-red-100 text-center border-b text-sm text-gray-600' : 'bg-gray-100 text-center border-b text-sm text-gray-600'"
-                    v-for="(item, index) in items"
+                    v-for="(item, index) in paginatedItems"
                     :key="item.id ?? index"
                 >
-                    <td class="p-2 border-r">{{ index + 1 }}</td>
+                    <td class="p-2 border-r">{{ ((currentPage - 1) * perPage) + index + 1 }}</td>
                     <td class="p-2 border-r">{{ (item.firstName || '') + ' ' + (item.lastName || '') }}</td>
 
                     <td class="p-2 border-r">
@@ -164,26 +174,66 @@
                 </tr>
             </tbody>
         </table>
+        <div class="flex justify-center items-center mt-4" v-if="totalPages > 1">
+            <button @click="prevPage" :disabled="currentPage === 1" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md mr-2 disabled:opacity-50">
+                Sebelumnya
+            </button>
+            <span class="text-gray-700">Halaman {{ currentPage }} dari {{ totalPages }}</span>
+            <button @click="nextPage" :disabled="currentPage === totalPages" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md ml-2 disabled:opacity-50">
+                Berikutnya
+            </button>
+        </div>
     </div>
 </template>
 
 <script>
 import axios from 'axios';
 import LapkinReport from "@/components/layouts/setupPDFharianpdf.vue";
+import { VueDatePicker } from '@vuepic/vue-datepicker';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
 export default {
-    components: { LapkinReport },
+    components: { LapkinReport,VueDatePicker },
     data() {
         return {
             picked: new Date().toLocaleDateString('en-CA'),
             items: [],
             singleItem: [],
+            currentPage: 1,
+            perPage: 25,
             baseUrl: "http://103.170.197.186:8000", // centralize base
         };
     },
+    computed: {
+        paginatedItems() {
+            const start = (this.currentPage - 1) * this.perPage;
+            const end = start + this.perPage;
+            return this.items.slice(start, end);
+        },
+        totalPages() {
+            return Math.ceil(this.items.length / this.perPage);
+        }
+    },
     methods: {
+        async fetchData(newDate) {
+            try {
+                const unitId = JSON.parse(localStorage.user).unitObj.id;
+                const date = newDate || this.picked;
+                if (!date) return;
+                const url = `http://103.170.197.186:8000/getabsen?tanggal=${date}&unitid=${unitId}&petugas_lapangan=1`;
+                const result = await axios.get(url);
+                if (result.data && result.data.status === "Success") {
+                    this.items = result.data.data || [];
+                } else {
+                    this.items = [];
+                }
+                this.currentPage = 1;
+            } catch (err) {
+                console.error("Fetch error:", err);
+                this.items = [];
+            }
+        },
         async downloadPDF() {
             // Wait for the component to be rendered
             await this.$nextTick();
@@ -202,27 +252,15 @@ export default {
                 });
                 const imgData = canvas.toDataURL('image/png');
                 
-                // A4 size in points: 595.28 x 841.89
-                const pdf = new jsPDF('p', 'pt', 'a4');
-                const imgProps = pdf.getImageProperties(imgData);
-                const pageWidth = pdf.internal.pageSize.getWidth();
-                const pageHeight = pdf.internal.pageSize.getHeight();
+                // A4 width in points: 595.28
+                const pageWidth = 595.28;
                 const margin = 30;
                 const pdfWidth = pageWidth - (margin * 2);
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                const pageHeight = pdfHeight + (margin * 2);
                 
-                let heightLeft = pdfHeight;
-                let position = 0;
-
-                pdf.addImage(imgData, 'PNG', margin, position, pdfWidth, pdfHeight);
-                heightLeft -= pageHeight;
-
-                while (heightLeft > 0) {
-                    position = heightLeft - pdfHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', margin, position, pdfWidth, pdfHeight);
-                    heightLeft -= pageHeight;
-                }
+                const pdf = new jsPDF('p', 'pt', [pageWidth, pageHeight]);
+                pdf.addImage(imgData, 'PNG', margin, margin, pdfWidth, pdfHeight);
 
                 pdf.save(`Laporan Progress Harian - ${this.picked}.pdf`);
 
@@ -252,26 +290,15 @@ export default {
                 });
                 const imgData = canvas.toDataURL('image/png');
                 
-                const pdf = new jsPDF('p', 'pt', 'a4');
-                const imgProps = pdf.getImageProperties(imgData);
-                const pageWidth = pdf.internal.pageSize.getWidth();
-                const pageHeight = pdf.internal.pageSize.getHeight();
+                // A4 width in points: 595.28
+                const pageWidth = 595.28;
                 const margin = 30;
                 const pdfWidth = pageWidth - (margin * 2);
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                const pageHeight = pdfHeight + (margin * 2);
                 
-                let heightLeft = pdfHeight;
-                let position = 0;
-
-                pdf.addImage(imgData, 'PNG', margin, position, pdfWidth, pdfHeight);
-                heightLeft -= pageHeight;
-
-                while (heightLeft > 0) {
-                    position = heightLeft - pdfHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', margin, position, pdfWidth, pdfHeight);
-                    heightLeft -= pageHeight;
-                }
+                const pdf = new jsPDF('p', 'pt', [pageWidth, pageHeight]);
+                pdf.addImage(imgData, 'PNG', margin, margin, pdfWidth, pdfHeight);
 
                 const filename = `Laporan Progress - ${(item.firstName || '')} ${(item.lastName || '')}.pdf`;
                 pdf.save(filename);
@@ -279,6 +306,16 @@ export default {
             } catch (error) {
                 console.error("Gagal membuat PDF perorangan:", error);
                 alert("Terjadi kesalahan saat membuat PDF perorangan.");
+            }
+        },
+        prevPage() {
+            if (this.currentPage > 1) {
+                this.currentPage--;
+            }
+        },
+        nextPage() {
+            if (this.currentPage < this.totalPages) {
+                this.currentPage++;
             }
         },
         // kembalikan URL lengkap kalau ada, else null
@@ -302,21 +339,7 @@ export default {
         },
     },
     async created() {
-        try {
-            const unitId = JSON.parse(localStorage.user).unitObj.id;
-            const date = this.picked ?? new Date().toLocaleDateString('en-CA');
-            const url = `http://103.170.197.186:8000/getabsen?tanggal=${date}&unitid=${unitId}&petugas_lapangan=1`;
-            const result = await axios.get(url);
-            if (result.data && result.data.status === "Success") {
-                this.items = result.data.data || [];
-            } else {
-                this.items = [];
-                // optional: console.warn(result.data)
-            }
-        } catch (err) {
-            console.error("Fetch error:", err);
-            this.items = [];
-        }
+        await this.fetchData();
     },
 };
 </script>

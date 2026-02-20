@@ -1,21 +1,10 @@
 <template>
     <div class="table w-full p-2">
-        <jsonExcel
-            class="
-                bg-blue-500
-                hover:bg-blue-700
-                text-white
-                font-bold
-                p-4
-                w-40
-                rounded
-            "
-            :data="items"
-            :fields="fetch_fields"
-            type="csv"
-        >
-            Download
-        </jsonExcel>
+        <div class="flex justify-start space-x-4">
+            <button @click="downloadPDF" class="bg-green-500 hover:bg-green-700 text-white font-bold p-2 w-40 rounded">
+                Download PDF
+            </button>
+        </div>
 
         <br /><br /><br />
 
@@ -23,11 +12,12 @@
             <VueDatePicker 
                 v-model="picked" 
                 month-picker 
+                auto-apply
                 @update:model-value="fetchData" 
             />
         </div>
 
-        <table class="w-full border">
+        <table class="w-full border" ref="table">
             <thead>
                 <tr class="bg-gray-50 border-b">
                     <th class="p-2 border-r cursor-pointer text-sm font-thin text-gray-500">
@@ -65,10 +55,10 @@
             <tbody>
                 <tr
                     class="bg-gray-100 text-center border-b text-sm text-gray-600"
-                    v-for="(item, index) in items"
+                    v-for="(item, index) in paginatedItems"
                     :key="item.id ?? index"
                 >
-                    <td class="p-2 border-r">{{ index + 1 }}</td>
+                    <td class="p-2 border-r">{{ ((currentPage - 1) * perPage) + index + 1 }}</td>
                     <td class="p-2 border-r">{{ (item.firstName || '') + ' ' + (item.lastName || '') }}</td>
                     <td class="p-2 border-r">{{ item.jabatan }}</td>
                     <td class="p-2 border-r">{{ item.jumlah_absen_masuk }}</td>
@@ -77,12 +67,24 @@
                 </tr>
             </tbody>
         </table>
+        <div class="flex justify-center items-center mt-4" v-if="totalPages > 1">
+            <button @click="prevPage" :disabled="currentPage === 1" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md mr-2 disabled:opacity-50">
+                Sebelumnya
+            </button>
+            <span class="text-gray-700">Halaman {{ currentPage }} dari {{ totalPages }}</span>
+            <button @click="nextPage" :disabled="currentPage === totalPages" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md ml-2 disabled:opacity-50">
+                Berikutnya
+            </button>
+        </div>
     </div>
 </template>
 
 <script>
 import axios from 'axios';
 import { VueDatePicker } from '@vuepic/vue-datepicker';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import headerImage from '@/assets/header.png';
 import '@vuepic/vue-datepicker/dist/main.css';
 // @ts-ignore
 import jsonExcel from "vue-json-excel3";
@@ -93,6 +95,8 @@ export default {
         return {
             picked: { month: new Date().getMonth(), year: new Date().getFullYear() },
             items: [],
+            currentPage: 1,
+            perPage: 25,
             fetch_fields: {
                 ID: "id",
                 "First Name": "firstName",
@@ -105,19 +109,30 @@ export default {
             baseUrl: "http://103.170.197.186:8000", // centralize base
         };
     },
+    computed: {
+        paginatedItems() {
+            const start = (this.currentPage - 1) * this.perPage;
+            const end = start + this.perPage;
+            return this.items.slice(start, end);
+        },
+        totalPages() {
+            return Math.ceil(this.items.length / this.perPage);
+        }
+    },
     methods: {
-        async fetchData() {
+        async fetchData(newDate) {
+            const dateObj = newDate || this.picked;
             try {
-                if (!this.picked) return;
+                if (!dateObj) return;
                 const unitId = JSON.parse(localStorage.user).unitObj.id;
                 
                 // Format tanggal ke YYYY-MM-01 untuk API
                 // picked.month dimulai dari 0 (Januari = 0)
-                let year = this.picked.year;
-                let month = this.picked.month + 1; 
+                let year = dateObj.year;
+                let month = dateObj.month + 1; 
                 const dateStr = `${year}-${String(month).padStart(2, '0')}-01`;
 
-                const url = `http://192.168.10.102:8000/rekap_bulanan`;
+                const url = `${this.baseUrl}/rekap_bulanan`;
                 const result = await axios.post(url, {
                     tanggal: dateStr,
                     unitid: unitId,
@@ -132,7 +147,74 @@ export default {
                 console.error("Fetch error:", err);
                 this.items = [];
             }
-        }
+            this.currentPage = 1;
+        },
+        async downloadPDF() {
+            const table = this.$refs.table;
+            if (!table) {
+                alert('Tabel tidak ditemukan untuk di-generate ke PDF.');
+                return;
+            }
+
+            try {
+                const canvas = await html2canvas(table, {
+                    scale: 4,
+                    useCORS: true,
+                });
+                const tableImgData = canvas.toDataURL('image/png');
+
+                const pdf = new jsPDF('p', 'pt', 'a4');
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const margin = 40;
+                const headerHeight = 60;
+                const titleHeight = 30;
+                const headerBottomMargin = 10;
+                
+                const contentWidth = pageWidth - margin * 2;
+                const contentStartY = margin + headerHeight + titleHeight + headerBottomMargin;
+                const contentHeight = pageHeight - contentStartY - margin;
+
+                const tableImgProps = pdf.getImageProperties(tableImgData);
+                const pdfTableHeight = (tableImgProps.height * contentWidth) / tableImgProps.width;
+
+                let heightLeft = pdfTableHeight;
+                let position = 0;
+
+                pdf.addImage(headerImage, 'PNG', margin, margin, contentWidth, headerHeight, undefined, 'NONE');
+                
+                pdf.setFontSize(14);
+                pdf.setFont("helvetica", "bold");
+                pdf.text("LAPORAN REKAP BULANAN", pageWidth / 2, margin + headerHeight + 20, { align: "center" });
+
+                pdf.addImage(tableImgData, 'PNG', margin, contentStartY, contentWidth, pdfTableHeight);
+                heightLeft -= contentHeight;
+
+                while (heightLeft > 0) {
+                    position -= contentHeight;
+                    pdf.addPage();
+                    pdf.addImage(headerImage, 'PNG', margin, margin, contentWidth, headerHeight, undefined, 'NONE');
+                    pdf.text("LAPORAN REKAP BULANAN", pageWidth / 2, margin + headerHeight + 20, { align: "center" });
+                    pdf.addImage(tableImgData, 'PNG', margin, position + contentStartY, contentWidth, pdfTableHeight);
+                    heightLeft -= contentHeight;
+                }
+                
+                pdf.save(`Laporan Rekap Bulanan - ${this.picked.year}-${String(this.picked.month + 1).padStart(2, '0')}.pdf`);
+            } catch (error) {
+                console.error("Gagal membuat PDF:", error);
+                alert("Terjadi kesalahan saat membuat PDF: " + error.message);
+            }
+        },
+        prevPage() {
+            if (this.currentPage > 1) {
+                this.currentPage--;
+            }
+        },
+        nextPage() {
+            if (this.currentPage < this.totalPages) {
+                this.currentPage++;
+            }
+        },
     },
     async created() {
         await this.fetchData();

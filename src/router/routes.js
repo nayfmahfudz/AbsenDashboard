@@ -80,6 +80,11 @@ const routes = [
         component: () => import('@/pages/developments/tables/dataTableProgress.vue')
       },
       {
+        path: 'dataTablePeilscale',
+        name: 'dataTablePeilscale',
+        component: () => import('@/pages/developments/tables/dataTablePeilscale.vue')
+      },
+      {
         path: 'listuser',
         name: 'listuser',
         component: () => import('@/pages/developments/tables/dataTableUser.vue')

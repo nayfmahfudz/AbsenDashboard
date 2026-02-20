@@ -1,21 +1,10 @@
 <template>
     <div class="table w-full p-2">
-        <jsonExcel
-            class="
-                bg-blue-500
-                hover:bg-blue-700
-                text-white
-                font-bold
-                p-4
-                w-40
-                rounded
-            "
-            :data="items"
-            :fields="fetch_fields"
-            type="csv"
-        >
-            Download
-        </jsonExcel>
+        <div class="flex justify-start space-x-4">
+            <button @click="downloadPDF" class="bg-green-500 hover:bg-green-700 text-white font-bold p-4 w-40 rounded">
+                Download PDF
+            </button>
+        </div>
 
         <br /><br /><br />
 
@@ -23,11 +12,12 @@
             <VueDatePicker 
                 v-model="picked" 
                 month-picker 
+                auto-apply
                 @update:model-value="fetchData" 
             />
         </div>
 
-        <table class="w-full border">
+        <table class="w-full border" ref="table">
             <thead>
                 <tr class="bg-gray-50 border-b">
                     <th class="p-2 border-r cursor-pointer text-sm font-thin text-gray-500">
@@ -80,6 +70,9 @@ import { VueDatePicker } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 // @ts-ignore
 import jsonExcel from "vue-json-excel3";
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import headerImage from '@/assets/header.png';
 
 export default {
     components: { jsonExcel, VueDatePicker },
@@ -100,6 +93,58 @@ export default {
         };
     },
     methods: {
+        async downloadPDF() {
+            const table = this.$refs.table;
+            if (!table) {
+                alert('Tabel tidak ditemukan untuk di-generate ke PDF.');
+                return;
+            }
+
+            try {
+                const canvas = await html2canvas(table, {
+                    scale: 2,
+                    useCORS: true,
+                });
+                const tableImgData = canvas.toDataURL('image/png');
+
+                const pdf = new jsPDF('p', 'pt', 'a4');
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const margin = 40;
+                const headerHeight = 60;
+                const headerBottomMargin = 20;
+                
+                const contentWidth = pageWidth - margin * 2;
+                const contentStartY = margin + headerHeight + headerBottomMargin;
+                const contentHeight = pageHeight - contentStartY - margin;
+
+                const tableImgProps = pdf.getImageProperties(tableImgData);
+                const pdfTableHeight = (tableImgProps.height * contentWidth) / tableImgProps.width;
+
+                let heightLeft = pdfTableHeight;
+                let position = 0;
+
+                pdf.addImage(headerImage, 'PNG', margin, margin, contentWidth, headerHeight, undefined, 'NONE');
+                pdf.addImage(tableImgData, 'PNG', margin, contentStartY, contentWidth, pdfTableHeight);
+                heightLeft -= contentHeight;
+
+                while (heightLeft > 0) {
+                    position -= contentHeight;
+                    pdf.addPage();
+                    pdf.addImage(headerImage, 'PNG', margin, margin, contentWidth, headerHeight, undefined, 'NONE');
+                    pdf.addImage(tableImgData, 'PNG', margin, position + contentStartY, contentWidth, pdfTableHeight);
+                    heightLeft -= contentHeight;
+                }
+                
+                const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                const month = monthNames[this.picked.month];
+                const year = this.picked.year;
+                pdf.save(`Laporan Absensi Bulanan - ${month} ${year}.pdf`);
+            } catch (error) {
+                console.error("Gagal membuat PDF:", error);
+                alert("Terjadi kesalahan saat membuat PDF.");
+            }
+        },
         async fetchData() {
             try {
                 if (!this.picked) return;

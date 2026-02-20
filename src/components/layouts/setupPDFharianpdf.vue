@@ -1,103 +1,160 @@
 <template>
   <div ref="printArea">
     <div v-for="(safeData, index) in finalData" :key="index" class="lapkin" :style="index > 0 ? 'page-break-before: always;' : ''">
-    <!-- HEADER -->
-    <div class="header">
-      <h1>LAPORAN KEGIATAN PEMELIHARAAN RUTIN BBWS BRANTAS</h1>
-      <p>{{ safeData.di }} </p>
-      <p>TAHUN ANGGARAN {{ safeData.tahun }}</p>
-    </div>
+      <!-- HEADER -->
+      <div class="header">
+        <h1>LAPORAN KEGIATAN PEMELIHARAAN RUTIN BBWS BRANTAS</h1>
+        <p>{{ safeData.di }}</p>
+        <p>TAHUN ANGGARAN {{ safeData.tahun }}</p>
+      </div>
 
-    <!-- INFO -->
-    <table>
-      <tr>
-        <td>METODE KERJA</td><td>: {{ safeData.metode }}</td>
-        <td>NAMA PETUGAS</td><td>: {{ safeData.petugas }}</td>
-      </tr>
-      <tr>
-        <td>JABATAN</td><td>: {{ safeData.jabatan }}</td>
-        <td>Unit</td><td>: {{ safeData.ppk }}</td>
-      </tr>
-      <tr>
-        <td>URGENSI</td>
-        <td colspan="3">: {{ safeData.urgensi }}</td>
-      </tr>
-      <tr>
-        <td>TANGGAL KEGIATAN</td>
-        <td colspan="3">: {{ safeData.tanggal }}</td>
-      </tr>
-    </table>
+      <!-- INFO -->
+      <table>
+        <tbody>
+          <tr>
+            <td>METODE KERJA</td>
+            <td>: {{ safeData.metode }}</td>
+            <td>NAMA PETUGAS</td>
+            <td>: {{ safeData.petugas }}</td>
+          </tr>
+          <tr>
+            <td>JABATAN</td>
+            <td>: {{ safeData.jabatan }}</td>
+            <td>Unit</td>
+            <td>: {{ safeData.ppk }}</td>
+          </tr>
+          <tr>
+            <td>URGENSI</td>
+            <td colspan="3">: {{ safeData.urgensi }}</td>
+          </tr>
+          <tr>
+            <td>TANGGAL KEGIATAN</td>
+            <td colspan="3">: {{ safeData.tanggal }}</td>
+          </tr>
+        </tbody>
+      </table>
 
-    <!-- DOKUMENTASI -->
-    <table>
-      <tr>
-        <th>No</th>
-        <th>URAIAN KEGIATAN</th>
-        <th>DOKUMENTASI</th>
-      </tr>
+      <!-- DOKUMENTASI -->
+      <table>
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>URAIAN KEGIATAN</th>
+            <th>DOKUMENTASI</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- SECTION I -->
+          <tr class="section">
+            <td>I</td>
+            <td>SALURAN DAN BANGUNAN</td>
+            <td>FOTO 0%</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>Nama Saluran : {{ safeData.saluran }}</td>
+            <td rowspan="3">
+              <img :src="safeData.foto0" class="foto img-box" @error="onImgError" alt="Foto 0%" />
+            </td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Nama Bangunan : {{ safeData.bangunan }}</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Kejuron : {{ safeData.kejuron }}</td>
+          </tr>
 
-      <!-- SECTION I -->
-      <tr class="section">
-        <td>I</td><td>SALURAN DAN BANGUNAN</td><td>FOTO 0%</td>
-      </tr>
-      <tr>
-        <td>1</td>
-        <td>Nama Saluran : {{ safeData.saluran }}</td>
-        <td rowspan="3">
-          <img :src="safeData.foto0" class="foto img-box" @error="onImgError" />
-        </td>
-      </tr>
-      <tr><td>2</td><td>Nama Bangunan : {{ safeData.bangunan }}</td></tr>
-      <tr><td>3</td><td>Kejuron : {{ safeData.kejuron }}</td></tr>
+          <!-- SECTION II -->
+          <tr class="section">
+            <td>II</td>
+            <td>LOKASI</td>
+            <td>FOTO 50%</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>Desa : {{ safeData.desa }}</td>
+            <td rowspan="4">
+              <img :src="safeData.foto50" class="foto" @error="onImgError" alt="Foto 50%" />
+            </td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Kecamatan : {{ safeData.kecamatan }}</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Kab/Kota : {{ safeData.kabupaten }}</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>Koordinat : {{ safeData.koordinat }}</td>
+          </tr>
 
-      <!-- SECTION II -->
-      <tr class="section">
-        <td>II</td><td>LOKASI</td><td>FOTO 50%</td>
-      </tr>
-      <tr>
-        <td>1</td>
-        <td>Desa : {{ safeData.desa }}</td>
-        <td rowspan="4">
-          <img :src="safeData.foto50" class="foto" @error="onImgError" />
-        </td>
-      </tr>
-      <tr><td>2</td><td>Kecamatan : {{ safeData.kecamatan }}</td></tr>
-      <tr><td>3</td><td>Kab/Kota : {{ safeData.kabupaten }}</td></tr>
-      <tr><td>4</td><td>Koordinat : {{ safeData.koordinat }}</td></tr>
-<br><br><br><br><br><br><br><br>
-      <!-- SECTION III -->
-      <tr class="section">
-        <td>III</td><td>OUTPUT KEGIATAN</td><td>FOTO 100%</td>
-      </tr>
-      <tr>
-        <td>1</td>
-        <td>Luas Area : {{ safeData.luas }}</td>
-        <td rowspan="10">
-          <img :src="safeData.foto100" class="foto-lg" @error="onImgError" />
-        </td>
-      </tr>
-      <tr><td>2</td><td>Panjang Saluran : {{ safeData.panjang }}</td></tr>
-      <tr><td>3</td><td>Angkat Sedimen : {{ safeData.sedimen }}</td></tr>
-      <tr><td>4</td><td>Pembersihan Sampah : {{ safeData.sampah }}</td></tr>
-      <tr><td>5</td><td>Menutup Bocoran : {{ safeData.bocoran }}</td></tr>
-      <tr><td>6</td><td>Pelumasan Pintu Air : {{ safeData.pelumasan }}</td></tr>
-      <tr><td>7</td><td>Pengecatan Pintu Air : {{ safeData.pengecatan }}</td></tr>
-      <tr><td>8</td><td>Angkat Potong Pohon : {{ safeData.pohon }}</td></tr>
-      <tr><td>9</td><td>TMA : {{ safeData.tma }}</td></tr>
-      <tr><td>10</td><td>Debit : {{ safeData.debit }}</td></tr>
+          <!-- SECTION III -->
+          <tr class="section">
+            <td>III</td>
+            <td>OUTPUT KEGIATAN</td>
+            <td>FOTO 100%</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>Luas Area : {{ safeData.luas }}</td>
+            <td rowspan="10">
+              <img :src="safeData.foto100" class="foto-lg" @error="onImgError" alt="Foto 100%" />
+            </td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Panjang Saluran : {{ safeData.panjang }}</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Angkat Sedimen : {{ safeData.sedimen }}</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>Pembersihan Sampah : {{ safeData.sampah }}</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>Menutup Bocoran : {{ safeData.bocoran }}</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>Pelumasan Pintu Air : {{ safeData.pelumasan }}</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td>Pengecatan Pintu Air : {{ safeData.pengecatan }}</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td>Angkat Potong Pohon : {{ safeData.pohon }}</td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td>TMA : {{ safeData.tma }}</td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td>Debit : {{ safeData.debit }}</td>
+          </tr>
 
-      <!-- MAP -->
-      <tr class="section">
-        <td>IV</td>
-        <td colspan="2">MAP</td>
-        </tr>
-      <tr>
-        <td>1</td>
-        <td colspan="2">
-          <img :src="safeData.map" class="foto-lg" @error="onImgError" />
-        </td>
-      </tr>
-    </table>
+          <!-- MAP -->
+          <tr class="section">
+            <td>IV</td>
+            <td colspan="2">MAP</td>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td colspan="2">
+              <img :src="safeData.map" class="foto-lg" @error="onImgError" alt="Map" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </template>
@@ -158,9 +215,9 @@ export default {
   computed: {
     finalData() {
       if (this.items && this.items.length > 0) {
-        return this.items.map(item => this.mapItemToData(item));
+        return this.items.map(item => this.mapItemToData(item))
       }
-      return [this.safeData];
+      return [this.safeData]
     }
   },
   methods: {
@@ -179,9 +236,9 @@ export default {
       return baseApi.replace(/\/$/, '') + '/' + p.replace(/^\/+/, '')
     },
     mapItemToData(item) {
-      const p = (item.progressList && item.progressList.length) ? item.progressList[0] : {};
-      const user = item;
-      
+      const p = (item.progressList && item.progressList.length) ? item.progressList[0] : {}
+      const user = item
+
       return {
         tahun: p.createdAt ? new Date(p.createdAt).getFullYear() : new Date().getFullYear(),
         di: p.DI || '-',
@@ -212,7 +269,7 @@ export default {
         foto50: this.getImgUrl(p.progress_50),
         foto100: this.getImgUrl(p.progress_100),
         map: this.getImgUrl(p.map)
-      };
+      }
     },
     async fetchData() {
       try {
@@ -224,27 +281,22 @@ export default {
         const res = await axios.get(url)
         if (res?.data?.status === 'Success') {
           const raw = res.data.data || {}
-          // Reuse the helper method
 
-          // mapping images
           this.safeData.foto0 = this.getImgUrl(raw.progress_1)
           this.safeData.foto50 = this.getImgUrl(raw.progress_50)
           this.safeData.foto100 = this.getImgUrl(raw.progress_100)
           this.safeData.map = this.getImgUrl(raw.map)
 
-          // mapping info
           this.safeData.petugas = `${raw.user?.firstName || ''} ${raw.user?.lastName || ''}`.trim() || this.safeData.petugas
           this.safeData.jabatan = raw.user?.unitData?.nama_unit || this.safeData.jabatan
           this.safeData.ppk = raw.user?.unitData?.nama_unit || this.safeData.ppk
           this.safeData.di = raw.DI || this.safeData.di
           this.safeData.saluran = raw.DI || this.safeData.saluran
           this.safeData.bangunan = raw.wilayah_kerja || this.safeData.bangunan
-          
           this.safeData.kecamatan = raw.kecamatan || this.safeData.kecamatan
           this.safeData.kabupaten = raw.kota || this.safeData.kabupaten
           this.safeData.desa = raw.kelurahan || this.safeData.desa
 
-          // mapping activities
           this.safeData.luas = raw.luas_area_kegiatan ?? this.safeData.luas
           this.safeData.panjang = raw.panjang_saluran ?? this.safeData.panjang
           this.safeData.sedimen = raw.angkat_sedimen ?? this.safeData.sedimen
@@ -281,7 +333,6 @@ export default {
 </script>
 
 <style scoped>
- 
 .lapkin {
   font-family: Arial, sans-serif;
 }
@@ -297,13 +348,15 @@ table {
   margin-bottom: 16px;
 }
 
-th, td {
+th,
+td {
   border: 1px solid #ddd;
   padding: 8px;
   vertical-align: top;
 }
 
-th, .section {
+th,
+.section {
   background: #f2f2f2;
   font-weight: bold;
 }

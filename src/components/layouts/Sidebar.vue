@@ -36,6 +36,7 @@
         <template #sub-menu>
           <menu-item-sub text="Data Bulanan" :route="{name: 'bulananProgress'}" />
           <menu-item-sub text="Data Harian" :route="{name: 'dataTableProgress'}" />
+          <menu-item-sub text="Data peilscale" :route="{name: 'dataTablePeilscale'}" />
         </template>
       </menu-item>
       <!-- <menu-item icon="cube-icon-o" text="Klimatologi">
