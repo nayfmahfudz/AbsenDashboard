@@ -1,17 +1,44 @@
 <template>
     <div class="table w-full p-2">
 
-        <br /><br /><br />
-
-        <div class="w-40 mb-4">
-            <VueDatePicker 
-                v-model="picked" 
-                :enable-time-picker="false"
-                auto-apply
-                model-type="yyyy-MM-dd"
-                format="yyyy-MM-dd"
-                @update:model-value="fetchData" 
-            />
+        <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+            <div class="flex flex-wrap items-end gap-4">
+                <div class="w-40">
+                    <label class="text-xs font-bold text-gray-600 block mb-1">Tanggal</label>
+                    <VueDatePicker 
+                        v-model="picked" 
+                        :enable-time-picker="false"
+                        auto-apply
+                        model-type="yyyy-MM-dd"
+                        format="yyyy-MM-dd"
+                        @update:model-value="fetchData" 
+                    />
+                </div>
+                <div class="w-48" v-if="isSuperAdmin">
+                    <label class="text-xs font-bold text-gray-600 block mb-1">Unit</label>
+                    <select 
+                        v-model="selectedUnit" 
+                        @change="fetchData" 
+                        class="w-full h-12 px-2 border rounded bg-white text-sm focus:outline-none focus:border-blue-500"
+                    >
+                        <option v-for="unit in units" :key="unit.id" :value="unit.id">
+                            {{ unit.nama_unit || unit.name }}
+                        </option>
+                    </select>
+                </div>
+                <div class="w-64">
+                    <label class="text-xs font-bold text-gray-600 block mb-1">Cari Nama</label>
+                    <input 
+                        type="text" 
+                        v-model="search" 
+                        placeholder="Cari Nama..." 
+                        class="w-full h-[38px] px-2 border rounded text-sm focus:outline-none focus:border-blue-500"
+                    />
+                </div>
+            </div>
+            <button @click="downloadPDF" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded h-[38px] flex items-center shadow">
+                Download PDF
+            </button>
         </div>
         <div style="position: absolute; left: -9999px; width: 794px;">
             <LapkinReport v-if="items.length" ref="pdfReport" :items="items" :date="picked" />
@@ -199,6 +226,10 @@ export default {
         return {
             picked: new Date().toLocaleDateString('en-CA'),
             items: [],
+            units: [],
+            selectedUnit: null,
+            isSuperAdmin: false,
+            search: '',
             singleItem: [],
             currentPage: 1,
             perPage: 25,
@@ -206,19 +237,46 @@ export default {
         };
     },
     computed: {
+        filteredItems() {
+            if (!this.search) return this.items;
+            const lowerSearch = this.search.toLowerCase();
+            return this.items.filter(item => {
+                const fullName = ((item.firstName || '') + ' ' + (item.lastName || '')).toLowerCase();
+                return fullName.includes(lowerSearch);
+            });
+        },
         paginatedItems() {
             const start = (this.currentPage - 1) * this.perPage;
             const end = start + this.perPage;
-            return this.items.slice(start, end);
+            return this.filteredItems.slice(start, end);
         },
         totalPages() {
-            return Math.ceil(this.items.length / this.perPage);
+            return Math.ceil(this.filteredItems.length / this.perPage);
         }
     },
     methods: {
+        async fetchUnits() {
+            try {
+               const result = await axios.get(`${this.baseUrl}/units`);
+                    this.units = result.data || [];
+            } catch (err) {
+                console.error("Fetch units error:", err);
+            }
+        },
         async fetchData(newDate) {
             try {
-                const unitId = JSON.parse(localStorage.user).unitObj.id;
+                let unitId = this.selectedUnit;
+                if (!unitId) {
+                    try {
+                        const user = JSON.parse(localStorage.user);
+                        if (user && user.unitObj) {
+                            unitId = user.unitObj.id;
+                            this.selectedUnit = unitId;
+                        }
+                    } catch (e) {
+                        console.error("Error parsing user data", e);
+                    }
+                }
                 const date = newDate || this.picked;
                 if (!date) return;
                 const url = `http://103.170.197.186:8000/getabsen?tanggal=${date}&unitid=${unitId}&petugas_lapangan=1`;
@@ -339,6 +397,16 @@ export default {
         },
     },
     async created() {
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            this.isSuperAdmin =  user["super_administrator"] === 1? true : false;
+        } catch (e) {
+            console.error("Error parsing user from localStorage", e);
+        }
+
+        if (this.isSuperAdmin) {
+            await this.fetchUnits();
+        }
         await this.fetchData();
     },
 };

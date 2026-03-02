@@ -1,14 +1,34 @@
 
 <template>
     <div class="table w-full p-2">
-        <div class="flex justify-start space-x-4">
-            <button @click="downloadPDF" class="bg-green-500 hover:bg-green-700 text-white font-bold p-2 w-40 rounded">
+        <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+            <div class="flex flex-wrap items-end gap-4">
+                <div class="w-64" v-if="isSuperAdmin">
+                    <label class="text-xs font-bold text-gray-600 block mb-1">Unit</label>
+                    <select 
+                        v-model="selectedUnit" 
+                        @change="fetchData" 
+                        class="w-full h-12 px-2 border rounded bg-white text-sm focus:outline-none focus:border-blue-500"
+                    >
+                        <option v-for="unit in units" :key="unit.id" :value="unit.id">
+                            {{ unit.nama_unit || unit.name }}
+                        </option>
+                    </select>
+                </div>
+                <div class="w-64">
+                    <label class="text-xs font-bold text-gray-600 block mb-1">Cari Nama</label>
+                    <input 
+                        type="text" 
+                        v-model="search" 
+                        placeholder="Cari Nama..." 
+                        class="w-full h-[38px] px-2 border rounded text-sm focus:outline-none focus:border-blue-500"
+                    />
+                </div>
+            </div>
+            <button @click="downloadPDF" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded h-[38px] flex items-center shadow">
                 Download PDF
             </button>
         </div>
-        <br>
-        <br>
-        <br>
         <table class="w-full border" ref="table">
             <thead>
                 <tr class="bg-gray-50 border-b">
@@ -57,7 +77,7 @@
             <tbody>
 
                 <tr class="bg-gray-100 text-center border-b text-sm text-gray-600"
-                    v-for="(item, index) in paginatedItems" :key="item.id || index">
+                    v-for="(item, index) in paginatedItems" :key="item.id ?? index">
                     <td class="p-2 border-r">{{ ((currentPage - 1) * perPage) + index + 1 }}</td>
                     <td class="p-2 border-r">{{ item.firstName + ' ' + item.lastName }}</td>
                     <td class="p-2 border-r">{{ item.unitObj.nama_unit }}</td>
@@ -88,8 +108,13 @@ export default {
     data() {
         return {
             items: [],
+            units: [],
+            selectedUnit: null,
+            isSuperAdmin: false,
+            search: '',
             currentPage: 1,
             perPage: 25,
+            baseUrl: "http://103.170.197.186:8000", // centralize base
             fetch_fields: {
                 "No": "no",
                 "Nama": {
@@ -103,6 +128,36 @@ export default {
         }
     },
     methods: {
+        async fetchUnits() {
+            try {
+                const result = await axios.get(`${this.baseUrl}/units`);
+                    this.units = result.data || [];
+            } catch (err) {
+                console.error("Fetch units error:", err);
+            }
+        },
+        async fetchData() {
+            try {
+                let unitId = this.selectedUnit;
+                if (!unitId) {
+                    try {
+                        const user = JSON.parse(localStorage.user);
+                        if (user && user.unitObj) {
+                            unitId = user.unitObj.id;
+                            this.selectedUnit = unitId;
+                        }
+                    } catch (e) {
+                        console.error("Error parsing user data", e);
+                    }
+                }
+                if (!unitId) return;
+
+                const result = await axios.get(`${this.baseUrl}/users/unit/${unitId}`);
+                this.items = result.data;
+            } catch (error) {
+                console.error("Fetch data error:", error);
+            }
+        },
         async downloadPDF() {
             const table = this.$refs.table;
             if (!table) {
@@ -217,6 +272,14 @@ export default {
         }
     },
     computed: {
+        filteredItems() {
+            if (!this.search) return this.items;
+            const lowerSearch = this.search.toLowerCase();
+            return this.items.filter(item => {
+                const fullName = ((item.firstName || '') + ' ' + (item.lastName || '')).toLowerCase();
+                return fullName.includes(lowerSearch);
+            });
+        },
         itemsForExport() {
             return this.items.map((item, index) => {
                 return { ...item, no: index + 1 };
@@ -225,17 +288,33 @@ export default {
         paginatedItems() {
             const start = (this.currentPage - 1) * this.perPage;
             const end = start + this.perPage;
-            return this.items.slice(start, end);
+            return this.filteredItems.slice(start, end);
         },
         totalPages() {
-            return Math.ceil(this.items.length / this.perPage);
+            return Math.ceil(this.filteredItems.length / this.perPage);
         }
     },
     async created() {
-        await axios.get(`http://103.170.197.186:8000/users/unit/` + JSON.parse(localStorage.user).unitObj.id).then(result => {
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            this.isSuperAdmin =  user["super_administrator"] === 1? true : false;
+        } catch (e) {
+            console.error("Error parsing user from localStorage", e);
+        }
 
-            this.items = result.data;
-        });
+        if (this.isSuperAdmin) {
+            try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            this.isSuperAdmin =  user["super_administrator"] === 1? true : false;
+        } catch (e) {
+            console.error("Error parsing user from localStorage", e);
+        }
+
+        if (this.isSuperAdmin) {
+            await this.fetchUnits();
+        }
+        }
+        await this.fetchData();
     }
 
 }
