@@ -24,11 +24,11 @@
                     </select>
                 </div>
                 <div class="w-64">
-                    <label class="text-xs font-bold text-gray-600 block mb-1">Cari Nama</label>
+                    <label class="text-xs font-bold text-gray-600 block mb-1">Cari</label>
                     <input 
                         type="text" 
                         v-model="search" 
-                        placeholder="Cari Nama..." 
+                        placeholder="Cari Nama, Email, NIK, Jabatan..." 
                         class="w-full h-[38px] px-2 border rounded text-sm focus:outline-none focus:border-blue-500"
                     />
                 </div>
@@ -81,7 +81,7 @@
                 >
                     <td class="p-2 border-r">{{ ((currentPage - 1) * perPage) + index + 1 }}</td>
                     <td class="p-2 border-r">{{ (item.firstName || '') + ' ' + (item.lastName || '') }}</td>
-                    <td class="p-2 border-r">{{ item.jabatan }}</td>
+                    <td class="p-2 border-r">{{ item.jabatan_op || item.jabatan || '-' }}</td>
                     <td class="p-2 border-r">{{ item.jumlah_absen_masuk }}</td>
                     <td class="p-2 border-r">{{ item.jumlah_absen_keluar }}</td>
                     <td class="p-2 border-r">{{ item.jumlah_progress }}</td>
@@ -139,8 +139,14 @@ export default {
             if (!this.search) return this.items;
             const lowerSearch = this.search.toLowerCase();
             return this.items.filter(item => {
-                const fullName = ((item.firstName || '') + ' ' + (item.lastName || '')).toLowerCase();
-                return fullName.includes(lowerSearch);
+                const firstName = (item.firstName || '').toLowerCase();
+                const lastName = (item.lastName || '').toLowerCase();
+                const fullName = `${firstName} ${lastName}`;
+                const email = (item.email || '').toLowerCase();
+                const jabatan = (item.jabatan_op?.nama_tenaga || item.jabatan || '').toLowerCase();
+                const nik = (item.nik || '').toLowerCase();
+
+                return fullName.includes(lowerSearch) || email.includes(lowerSearch) || jabatan.includes(lowerSearch) || nik.includes(lowerSearch);
             });
         },
         paginatedItems() {
@@ -169,8 +175,9 @@ export default {
 
                 if (!unitId) {
                     try {
-                        const user = JSON.parse(localStorage.user);
-                        if (user && user.unitObj) {
+                        const userStr = localStorage.getItem('user');
+                        const user = userStr ? JSON.parse(userStr) : null;
+                        if (user?.unitObj) {
                             unitId = user.unitObj.id;
                             this.selectedUnit = unitId;
                         }
@@ -271,8 +278,9 @@ export default {
     },
     async created() {
         try {
-            const user = JSON.parse(localStorage.getItem('user'));
-            this.isSuperAdmin =  user["super_administrator"] === 1? true : false;
+            const userStr = localStorage.getItem('user');
+            const user = userStr ? JSON.parse(userStr) : null;
+            this.isSuperAdmin = user?.super_administrator === 1;
         } catch (e) {
             console.error("Error parsing user from localStorage", e);
         }

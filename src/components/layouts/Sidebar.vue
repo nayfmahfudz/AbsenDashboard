@@ -24,12 +24,16 @@
     <!-- Menu -->
     <div class="mt-14">
       <menu-header text="Development" />
-      <menu-item icon="lightning-bolt-icon-o" text="Getting Started" :route="{name: 'dev-getting-started'}" />
+      <menu-item icon="cube-icon-o" text="User">
+        <template #sub-menu>
+          <menu-item-sub text="Buat User" :route="{name: 'editFormUser'}" />
+          <menu-item-sub text="Data User" :route="{name: 'listuser'}" />
+        </template>
+      </menu-item>
       <menu-item icon="cube-icon-o" text="Absensi">
         <template #sub-menu>
           <menu-item-sub text="Data Bulanan" :route="{name: 'absensiBulanan'}" />
           <menu-item-sub text="Data Harian" :route="{name: 'dataAbsenHarian'}" />
-          <menu-item-sub text="Data User" :route="{name: 'listuser'}" />
         </template>
       </menu-item>
       <menu-item icon="cube-icon-o" text="Laporan Progress">

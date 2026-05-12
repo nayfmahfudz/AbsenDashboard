@@ -30,7 +30,7 @@
                 <input 
                     type="text" 
                     v-model="search" 
-                    placeholder="Cari Nomenklatur..." 
+                    placeholder="Cari Nomenklatur, Nama, NIK..." 
                     class="w-full h-[38px] px-2 border rounded text-sm focus:outline-none focus:border-blue-500"
                 />
             </div>
@@ -41,6 +41,16 @@
                     <th class="p-2 border-r cursor-pointer text-sm font-thin text-gray-500">
                         <div class="flex items-center justify-center">
                             no
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                     stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                            </svg>
+                        </div>
+                    </th>
+                    <th class="p-2 border-r cursor-pointer text-sm font-thin text-gray-500">
+                        <div class="flex items-center justify-center">
+                         Nama 
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                                      stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -117,6 +127,7 @@
                     :key="item.id ?? index"
                 >
                     <td class="p-2 border-r">{{ ((currentPage - 1) * perPage) + index + 1 }}</td>
+                    <td class="p-2 border-r">{{ item.userData?.firstName }} {{ item.userData?.lastName }}</td>
                     <td class="p-2 border-r">{{ item.nomenklatur }}</td>
                     <td class="p-2 border-r">{{ item.jam }}</td>
                     <td class="p-2 border-r">{{ item.TMA }}</td>
@@ -169,10 +180,18 @@ export default {
     computed: {
         filteredItems() {
             if (!this.search) return this.items;
-            const lowerSearch = this.search.toLowerCase();
-            return this.items.filter(item => 
-                (item.nomenklatur && item.nomenklatur.toLowerCase().includes(lowerSearch))
-            );
+            const s = this.search.toLowerCase();
+            return this.items.filter(item => {
+                const nomenklatur = (item.nomenklatur || '').toLowerCase();
+                const firstName = (item.userData?.firstName || '').toLowerCase();
+                const lastName = (item.userData?.lastName || '').toLowerCase();
+                const fullName = `${firstName} ${lastName}`;
+                const email = (item.userData?.email || '').toLowerCase();
+                const jabatan = (item.userData?.jabatan_op?.nama_tenaga || '').toLowerCase();
+                const nik = (item.userData?.nik || '').toLowerCase();
+
+                return nomenklatur.includes(s) || fullName.includes(s) || email.includes(s) || jabatan.includes(s) || nik.includes(s);
+            });
         },
         paginatedItems() {
             const start = (this.currentPage - 1) * this.perPage;

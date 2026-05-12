@@ -36,13 +36,14 @@ const routes = [
         component: () => import('@/pages/Home.vue')
       },
       {
-        path: 'permohonan',
-        name: 'permohonan',
-        component: () => import('@/pages/developments/Form/index.vue')
+        path: 'editFormUser',
+        name: 'editFormUser',
+        component: () => import('@/pages/developments/Form/editFormUser.vue')
       },
       {
-        path: 'permohonan/:id',
-        component: () => import('@/pages/developments/Form/index.vue')
+        path: 'editFormUser/:id',
+        name: 'editFormUser-id',
+        component: () => import('@/pages/developments/Form/editFormUser.vue')
       },
       {
         path: 'absensiBulanan',

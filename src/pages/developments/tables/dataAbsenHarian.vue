@@ -24,11 +24,11 @@
                     </select>
                 </div>
                 <div class="w-64">
-                    <label class="text-xs font-bold text-gray-600 block mb-1">Cari Nama</label>
+                    <label class="text-xs font-bold text-gray-600 block mb-1">Cari</label>
                     <input 
                         type="text" 
                         v-model="search" 
-                        placeholder="Cari Nama..." 
+                        placeholder="Cari Nama, Email, NIK, Jabatan..." 
                         class="w-full h-[38px] px-2 border rounded text-sm focus:outline-none focus:border-blue-500"
                     />
                 </div>
@@ -200,8 +200,14 @@ export default {
             if (!this.search) return this.items;
             const lowerSearch = this.search.toLowerCase();
             return this.items.filter(item => {
-                const fullName = ((item.firstName || '') + ' ' + (item.lastName || '')).toLowerCase();
-                return fullName.includes(lowerSearch);
+                const firstName = (item.firstName || '').toLowerCase();
+                const lastName = (item.lastName || '').toLowerCase();
+                const fullName = `${firstName} ${lastName}`;
+                const email = (item.email || '').toLowerCase();
+                const jabatan = (item.jabatan_op?.nama_tenaga || '').toLowerCase();
+                const nik = (item.nik || '').toLowerCase();
+
+                return fullName.includes(lowerSearch) || email.includes(lowerSearch) || jabatan.includes(lowerSearch) || nik.includes(lowerSearch);
             });
         },
         paginatedItems() {
@@ -282,7 +288,7 @@ export default {
             }
         },
         async fetchData(newDate) {
-            const date = newDate || this.picked;
+            const date =  this.picked;
             if (!date) return;
             const offset = date.getTimezoneOffset();
             const dateStr = new Date(date.getTime() - (offset*60*1000)).toISOString().split('T')[0];

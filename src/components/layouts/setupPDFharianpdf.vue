@@ -244,7 +244,7 @@ export default {
         di: p.DI || '-',
         metode: 'Manual',
         petugas: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
-        jabatan: user.jabatan || user.unitObj?.nama_unit || user.unitData?.nama_unit || '-',
+        jabatan: user.jabatan_op?.nama_tenaga || user.unitObj?.nama_unit || user.unitData?.nama_unit || '-',
         ppk: user.unitObj?.nama_unit || user.unitData?.nama_unit || 'PPK OP I',
         urgensi: 'Normal',
         tanggal: p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-CA') : (this.date || new Date().toLocaleDateString('en-CA')),
